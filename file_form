@@ -1,0 +1,82 @@
+<?php
+if (isset($_POST['upload'])) {
+    $a_data = $a_error = [];
+    
+    for ($i = 0; $i < 5; $i++) {
+        if ( ! isset($_FILES['myfile']['name'][$i]) )
+            break;//'Нет файла';
+            
+        //1
+        $a_data['myfile'][$i] = [
+            'name'     => $_FILES['myfile']['name'][$i],
+            'type'     => $_FILES['myfile']['type'][$i],
+            'size'     => $_FILES['myfile']['size'][$i],
+            'tmp_name' => $_FILES['myfile']['tmp_name'][$i],
+            'error'    => $_FILES['myfile']['error'][$i]
+        ];
+        
+       
+        //2
+        if ($a_data['myfile'][$i]['error'] != 0) {
+            switch ($a_data['myfile'][$i]['error']) {
+                case 1 : $a_error['myfile'][$i] = 'Ваш файл слишком большой#1';
+                    break;
+                case 2 : $a_error['myfile'][$i] = 'Ваш файл слишком большой#2';
+                    break;
+                case 3 : $a_error['myfile'][$i] = 'Error #3';
+                    break;
+                case 4 : $a_error['myfile'][$i] = 'Выберите файл для загрузки. Файл не выбран';
+                    break;
+                case 6 : $a_error['myfile'][$i] = 'Error #6';
+                    break;
+                case 7 : $a_error['myfile'][$i] = 'Случилась системная ошибка. Попробуйте загрузить файл позже';
+                    break;
+                case 8 : $a_error['myfile'][$i] = 'Error #8';
+                    break;
+            }
+        }
+        else if ($a_data['myfile'][$i]['size'] > 1024 * 1024) {
+            $a_error['myfile'][$i] = 'Файл слишком большой. Максимально 1 метр';
+        }
+        else {
+            $a_ext = ['png', 'jpeg', 'jpg', 'gif'];
+            $ext = mb_strtolower(pathinfo($a_data['myfile'][$i]['name'], PATHINFO_EXTENSION));
+
+            if (!in_array($ext, $a_ext))
+                $a_error['myfile'][$i] = 'Данный файл не разрешается к загрузке. ';
+
+            else if (false === $image[$i] = getimagesize($a_data['myfile'][$i]['tmp_name'])) {
+                $a_error['myfile'][$i] = 'Данный файл не есть картинкой';
+            }
+            else if ($image[$i][0] > 2000 or $image[$i][1] > 2000)
+                $a_error['myfile'][$i] = 'Максимальный размер фото 2000х2000';
+        }
+
+        //4
+        if ( ! isset( $a_error['myfile'][$i] ) ) {
+            move_uploaded_file(
+                $_FILES['myfile']['tmp_name'][$i], $_SERVER['DOCUMENT_ROOT'] . '/upload/' . mb_substr(md5($_FILES['myfile']['name'][$i] . microtime()), 0, 10) . '.' . $ext
+                //$_SERVER['DOCUMENT_ROOT'] . '/upload/' . addslashes( $_FILES['myfile']['name'] )
+            );
+
+            //exit(header('Location: file_form.php'));
+        }
+    }
+}
+?>
+
+<form action="" method="post" enctype="multipart/form-data" >
+    <input type="file" name="myfile[]" multiple="multiple"/><br />
+    <!--<input type="hidden" name="MAX_FILE_SIZE" value="2000000" />-->
+    <?php if ( isset( $a_error['myfile'] ) and $a_error['myfile'] ): ?>
+        <?php foreach ( $a_error['myfile'] as $error ): ?>
+            <span style="color: red"><?= $error ?></span>
+        <?php endforeach ?>
+    <?php endif ?>
+    <input type="submit" name="upload" value="Upload file" />
+</form>
+
+<?php
+foreach ((array) glob('upload/*') as $file)
+    echo '<img src="' . $file . '" height="200" />';
+?>
