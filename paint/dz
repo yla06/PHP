@@ -1,0 +1,20 @@
+<?php
+
+header( 'Content-Type: image/jpeg' );
+$im = imagecreatefromjpeg( '5.jpg' );
+
+$font = $_SERVER[ 'DOCUMENT_ROOT' ] . '/paint/arial.ttf';
+$text = '1234567890';
+
+$x = imagesx( $im );
+$y = imagesy( $im );
+
+$d = hypot( $x, $y);
+
+$a = imagettfbbox( 30, 0, $font, $text );
+
+imageTtfText($im, 30, 45, ( $d / 2 ) - ( $a[2] / 2 ), ( $d / 2 ) - ( $a[5] / 2 ), imageColorAllocate( $im, 255, 0, 0 ), $font, $text);
+
+imagejpeg( $im );
+imagedestroy($im);
+exit;
